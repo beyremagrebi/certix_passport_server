@@ -19,6 +19,9 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = int(
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15")
     )
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(
+    os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")
+)
 
     if not JWT_SECRET_KEY:
         raise RuntimeError("JWT_SECRET_KEY is missing from the environment")

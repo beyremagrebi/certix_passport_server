@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import settings
 from app.db.session import Base
 from app.models.user import User  # Register User model
+from app.models.refresh_token import RefreshToken
 
 config = context.config
 

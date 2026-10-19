@@ -1,12 +1,12 @@
-
-from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
-from app.schemas.user import UserLogin, UserRegister
+from app.schemas.user import UserLogin, UserRegister, UserResponse
 from app.services.auth_service import (
     AuthService,
     EmailAlreadyRegistered,
     InvalidCredentials,
+    InvalidRefreshToken,
 )
 from app.utils.response import success_response, error_response
 
@@ -24,17 +24,17 @@ class AuthController:
                 status_code=409,
             )
 
+        safe_user = UserResponse.model_validate(user).model_dump(mode="json")
+
         return success_response(
-            data=jsonable_encoder(user, include={
-                "id", "first_name", "last_name", "email"
-            }),
+            data=safe_user,
             message="User registered successfully",
             status_code=201,
         )
 
     def login(self, data: UserLogin) -> JSONResponse:
         try:
-            token = self.auth_service.login(data)
+            tokens = self.auth_service.login(data)
         except InvalidCredentials:
             return error_response(
                 message="Invalid email or password",
@@ -42,10 +42,28 @@ class AuthController:
             )
 
         return success_response(
-            data={
-                "access_token": token,
-                "token_type": "bearer",
-            },
+            data=tokens,
             message="Login successful",
-            status_code=200,
+        )
+
+    def refresh(self, refresh_token: str) -> JSONResponse:
+        try:
+            tokens = self.auth_service.refresh(refresh_token)
+        except InvalidRefreshToken:
+            return error_response(
+                message="Invalid or expired refresh token",
+                status_code=401,
+            )
+
+        return success_response(
+            data=tokens,
+            message="Tokens refreshed successfully",
+        )
+
+    def logout(self, refresh_token: str) -> JSONResponse:
+        self.auth_service.logout(refresh_token)
+
+        return success_response(
+            data=None,
+            message="Logged out successfully",
         )

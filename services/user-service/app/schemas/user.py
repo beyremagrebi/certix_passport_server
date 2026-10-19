@@ -1,6 +1,3 @@
-
-# app/schemas/user.py
-
 from typing import Literal
 
 from pydantic import (
@@ -19,7 +16,7 @@ class RequestSchema(BaseModel):
 
 
 class UserRegister(RequestSchema):
-    """Data accepted when creating a new account."""
+    """Data accepted during account registration."""
 
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
@@ -32,7 +29,9 @@ class UserRegister(RequestSchema):
         if isinstance(value, str):
             value = value.strip()
             if not value:
-                raise ValueError("Name cannot be empty or whitespace")
+                raise ValueError(
+                    "Name cannot be empty or whitespace"
+                )
         return value
 
 
@@ -55,7 +54,14 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    """Authentication token returned after successful login."""
+    """Tokens returned after login or refresh."""
 
     access_token: str
+    refresh_token: str
     token_type: Literal["bearer"] = "bearer"
+
+
+class RefreshRequest(RequestSchema):
+    """Refresh token submitted to refresh or logout."""
+
+    refresh_token: str = Field(min_length=1, max_length=512)
