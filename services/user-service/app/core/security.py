@@ -18,11 +18,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return password_hash.verify(plain_password, hashed_password)
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(user_id: int) -> str:
     now = datetime.now(timezone.utc)
 
     payload = {
-        "sub": subject,
+        "user_id": user_id,
+        "sub": str(user_id),
         "type": "access",
         "iat": now,
         "exp": now + timedelta(
