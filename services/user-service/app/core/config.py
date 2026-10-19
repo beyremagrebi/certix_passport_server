@@ -14,6 +14,14 @@ class Settings:
     port: int = int(os.getenv("PORT", "8001"))
     debug: bool = os.getenv("DEBUG", "true").lower() in ("true", "1", "yes", "on")
     database_url: str = os.getenv("DATABASE_URL", "")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15")
+    )
+
+    if not JWT_SECRET_KEY:
+        raise RuntimeError("JWT_SECRET_KEY is missing from the environment")
 
 
 settings = Settings() 
