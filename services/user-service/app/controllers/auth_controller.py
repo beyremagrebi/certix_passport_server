@@ -2,8 +2,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from app.schemas.user import UserLogin, UserRegister, UserResponse
-from app.services.auth_service import (
-    AuthService,
+from app.services.auth_service import AuthService
+
+from app.validators.auth_validator import (
     EmailAlreadyRegistered,
     InvalidCredentials,
     InvalidRefreshToken,
