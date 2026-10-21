@@ -7,6 +7,7 @@ from flask_jwt_extended import (
 
 from app.extensions import db
 from app.models.user import User
+from app.models.user_role import UserRole
 from app.models.refresh_token import RefreshToken
 from app.repositories.user_repository import UserRepository
 
@@ -39,6 +40,7 @@ class AuthService:
             email=data["email"],
             first_name=data["first_name"],
             last_name=data["last_name"],
+            role=UserRole.STUDENT,
         )
         user.set_password(data["password"])
 
