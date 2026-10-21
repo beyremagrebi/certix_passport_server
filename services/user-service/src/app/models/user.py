@@ -24,6 +24,9 @@ class User(BaseModel):
     password_hash: Mapped[str] = mapped_column(
         String(255), nullable=False
     )
+    profile_photo_ref: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
