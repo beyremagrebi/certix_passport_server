@@ -1,6 +1,7 @@
 
 import logging
 
+from app.middlewares.jwt_middleware import register_jwt_middleware
 from flask import Flask
 
 from app.config import Config
@@ -13,7 +14,9 @@ def create_app() -> Flask:
     app.config.from_object(Config)
 
     init_extensions(app)
+    register_jwt_middleware(app)
     register_routes(app)
+    
 
     return app
 
