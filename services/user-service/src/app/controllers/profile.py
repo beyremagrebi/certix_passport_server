@@ -1,11 +1,59 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity
 
+from app.services.user import UserService
 from app.services.profile_photo import (
     ProfilePhotoError,
     ProfilePhotoService,
 )
 from app.utils.api_response import error_response, success_response
+from app.validators.profile import validate_profile_update
+
+
+def get_profile():
+    try:
+        profile = UserService.get_profile(get_jwt_identity())
+        return success_response(
+            message="Profile retrieved successfully.",
+            data=profile,
+        )
+    except ValueError as exc:
+        return error_response(
+            message=str(exc),
+            code="VALIDATION_ERROR",
+            status_code=400,
+        )
+    except LookupError as exc:
+        return error_response(
+            message=str(exc),
+            code="USER_NOT_FOUND",
+            status_code=404,
+        )
+
+
+def update_profile():
+    try:
+        profile_data = validate_profile_update(request.get_json(silent=True))
+        profile = UserService.update_profile(
+            get_jwt_identity(),
+            profile_data,
+        )
+        return success_response(
+            message="Profile updated successfully.",
+            data=profile,
+        )
+    except ValueError as exc:
+        return error_response(
+            message=str(exc),
+            code="VALIDATION_ERROR",
+            status_code=400,
+        )
+    except LookupError as exc:
+        return error_response(
+            message=str(exc),
+            code="USER_NOT_FOUND",
+            status_code=404,
+        )
 
 def upload_profile_photo():
     try:
