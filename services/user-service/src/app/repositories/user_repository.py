@@ -5,6 +5,10 @@ from app.models.user import User
 
 class UserRepository:
     @staticmethod
+    def get_by_id(user_id: int) -> User | None:
+        return db.session.get(User, user_id)
+
+    @staticmethod
     def get_by_email(email: str) -> User | None:
         return db.session.execute(
             db.select(User).where(User.email == email)
@@ -19,3 +23,8 @@ class UserRepository:
     @staticmethod
     def get_by_id(user_id: int):
         return db.session.get(User, user_id)
+      
+    @staticmethod
+    def update_profile_photo(user: User, asset_ref: str) -> None:
+        user.profile_photo_ref = asset_ref
+        db.session.add(user)
