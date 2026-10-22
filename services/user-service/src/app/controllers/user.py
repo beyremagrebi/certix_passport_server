@@ -28,3 +28,4 @@ def get_me():
             code="USER_NOT_FOUND",
             status_code=404,
         )
+
