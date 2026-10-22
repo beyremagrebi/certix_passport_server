@@ -77,6 +77,11 @@ SECRET_KEY=replace_with_a_secure_random_secret
 JWT_SECRET_KEY=replace_with_a_secure_random_secret
 JWT_ACCESS_TOKEN_EXPIRES_MINUTES=15
 JWT_REFRESH_TOKEN_EXPIRES_DAYS=30
+PROFILE_PHOTO_STORAGE_DIR=./storage/profile-photos
+PROFILE_PHOTO_MAX_BYTES=5242880
+PROFILE_PHOTO_MAX_WIDTH=2048
+PROFILE_PHOTO_MAX_HEIGHT=2048
+PROFILE_PHOTO_ALLOWED_FORMATS=JPEG,PNG,WEBP
 ```
 
 Replace `your_local_password` with the same password used in the root `.env`.
@@ -91,9 +96,26 @@ From `services/user-service`:
 poetry install
 ```
 
+On Windows, starting from the repository root, use:
+
+```powershell
+cd services\user-service
+poetry install
+```
+
 ## 7. Run database migrations
 
+Run this from `services\user-service` (the directory containing
+`pyproject.toml`):
+
 ```bash
+poetry run flask --app app db upgrade
+```
+
+On Windows, starting from the repository root:
+
+```powershell
+cd services\user-service
 poetry run flask --app app db upgrade
 ```
 
@@ -114,6 +136,13 @@ Only generate a migration if the project does not already have the required migr
 poetry run user-service
 ```
 
+On Windows, if you are at the repository root:
+
+```powershell
+cd services\user-service
+poetry run user-service
+```
+
 The service should run on:
 
 ```text
@@ -121,6 +150,21 @@ http://127.0.0.1:8001
 ```
 
 Use the actual routes defined in the application to test the API.
+
+### Profile photo upload
+
+Authenticated clients can upload a profile photo as multipart form data:
+
+```text
+POST /users/me/profile-photo
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+photo=<image>
+```
+
+The service validates the image bytes, format, file size, and dimensions before
+storing it in the configured file store. The response contains an opaque
+`asset_ref`; the internal storage path is never exposed.
 
 ## Quick Start
 
