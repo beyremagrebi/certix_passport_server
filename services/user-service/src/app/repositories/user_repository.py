@@ -21,6 +21,9 @@ class UserRepository:
         return user
 
     @staticmethod
+    def get_by_id(user_id: int):
+        return db.session.get(User, user_id)
+      
     def update_profile_photo(user: User, asset_ref: str) -> User:
         user.profile_photo_ref = asset_ref
         db.session.commit()

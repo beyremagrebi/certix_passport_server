@@ -1,6 +1,7 @@
 
 import logging
 
+from app.middlewares.jwt_middleware import register_jwt_middleware
 from flask import Flask
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -15,7 +16,9 @@ def create_app() -> Flask:
     app.config.from_object(Config)
 
     init_extensions(app)
+    register_jwt_middleware(app)
     register_routes(app)
+    
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(_error):

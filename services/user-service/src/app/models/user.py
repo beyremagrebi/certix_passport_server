@@ -1,28 +1,46 @@
-
-from sqlalchemy import String
+from sqlalchemy import Enum as SQLAlchemyEnum, String
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import (
-    generate_password_hash,
     check_password_hash,
+    generate_password_hash,
 )
 
 from app.models.base import BaseModel
+from app.models.user_role import UserRole
 
 
 class User(BaseModel):
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
+        String(255),
+        unique=True,
+        nullable=False,
+        index=True,
     )
     first_name: Mapped[str] = mapped_column(
-        String(100), nullable=False
+        String(100),
+        nullable=False,
     )
     last_name: Mapped[str] = mapped_column(
-        String(100), nullable=False
+        String(100),
+        nullable=False,
     )
     password_hash: Mapped[str] = mapped_column(
-        String(255), nullable=False
+        String(255),
+        nullable=False,
+    )
+    role: Mapped[UserRole] = mapped_column(
+        SQLAlchemyEnum(
+            UserRole,
+            name="user_role",
+            values_callable=lambda enum_cls: [
+                role.value for role in enum_cls
+            ],
+        ),
+        nullable=False,
+        default=UserRole.STUDENT,
+        server_default=UserRole.STUDENT.value,
     )
     profile_photo_ref: Mapped[str | None] = mapped_column(
         String(255), nullable=True
