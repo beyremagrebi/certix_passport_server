@@ -1,11 +1,14 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity
 
+from app.services.user import UserService
 from app.services.profile_photo import (
     ProfilePhotoError,
     ProfilePhotoService,
 )
 from app.utils.api_response import error_response, success_response
+from app.validators.profile import validate_profile_update
+
 
 def upload_profile_photo():
     try:
