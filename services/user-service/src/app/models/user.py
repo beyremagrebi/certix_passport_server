@@ -45,6 +45,17 @@ class User(BaseModel):
     profile_photo_ref: Mapped[str | None] = mapped_column(
         String(255), nullable=True
     )
+    bio: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    study_program: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )
+    level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    linkedin_url: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
+    github_url: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
