@@ -2,6 +2,8 @@ from urllib.parse import urlparse
 
 
 PROFILE_FIELDS = {
+    "first_name": 100,
+    "last_name": 100,
     "bio": 300,
     "study_program": 100,
     "level": 50,
@@ -9,23 +11,32 @@ PROFILE_FIELDS = {
     "github_url": 255,
 }
 
+URL_FIELDS = {"linkedin_url", "github_url"}
+REQUIRED_FIELDS = {"first_name", "last_name"}
+
 
 def validate_profile_update(data: object) -> dict[str, str | None]:
     if not isinstance(data, dict):
         raise ValueError("Request body must be a JSON object.")
 
-    unknown_fields = set(data) - PROFILE_FIELDS.keys()
+    if not data:
+        raise ValueError("At least one profile field is required.")
+
+    if any(not isinstance(field, str) for field in data):
+        raise ValueError("Profile field names must be strings.")
+
+    unknown_fields = data.keys() - PROFILE_FIELDS.keys()
     if unknown_fields:
         field = sorted(unknown_fields)[0]
         raise ValueError(f"Unsupported profile field: {field}.")
 
     validated: dict[str, str | None] = {}
-    for field, max_length in PROFILE_FIELDS.items():
-        if field not in data:
-            continue
 
-        value = data[field]
+    for field, value in data.items():
         if value is None:
+            if field in REQUIRED_FIELDS:
+                raise ValueError(f"{field} cannot be null.")
+
             validated[field] = None
             continue
 
@@ -33,13 +44,20 @@ def validate_profile_update(data: object) -> dict[str, str | None]:
             raise ValueError(f"{field} must be a string or null.")
 
         value = value.strip()
-        if len(value) > max_length:
+
+        if field in REQUIRED_FIELDS and not value:
+            raise ValueError(f"{field} cannot be empty.")
+
+        if len(value) > PROFILE_FIELDS[field]:
             raise ValueError(
-                f"{field} must not exceed {max_length} characters."
+                f"{field} must not exceed "
+                f"{PROFILE_FIELDS[field]} characters."
             )
 
-        if field.endswith("_url") and value and not _is_valid_url(value):
-            raise ValueError(f"{field} must be a valid URL.")
+        if field in URL_FIELDS and value and not _is_valid_url(value):
+            raise ValueError(
+                f"{field} must be a valid HTTP or HTTPS URL."
+            )
 
         validated[field] = value or None
 
@@ -47,9 +65,15 @@ def validate_profile_update(data: object) -> dict[str, str | None]:
 
 
 def _is_valid_url(value: str) -> bool:
-    parsed = urlparse(value)
-    return (
-        parsed.scheme in {"http", "https"}
-        and bool(parsed.hostname)
-        and not any(char.isspace() for char in value)
-    )
+    try:
+        parsed = urlparse(value)
+
+        return (
+            parsed.scheme in {"http", "https"}
+            and bool(parsed.hostname)
+            and "." in parsed.hostname
+            and not any(char.isspace() for char in value)
+            and parsed.port != 0
+        )
+    except ValueError:
+        return False

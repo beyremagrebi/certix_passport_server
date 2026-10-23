@@ -10,7 +10,7 @@ from app.validators.profile import validate_profile_update
 def get_me():
     try:
         user_id = get_jwt_identity()
-        user_data = UserService.get_profile(user_id)
+        user_data = UserService.get_me(user_id)
 
         return success_response(
             message="User profile retrieved successfully.",

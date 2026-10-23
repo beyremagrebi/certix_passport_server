@@ -30,9 +30,20 @@ class UserRepository:
         db.session.add(user)
 
     @staticmethod
-    def update_profile(user: User, profile_data: dict[str, str | None]) -> User:
+    def update_profile(user: User, profile_data: dict) -> User:
+        allowed_fields = {
+            "first_name",
+            "last_name",
+            "bio",
+            "study_program",
+            "level",
+            "linkedin_url",
+            "github_url",
+        }
+
         for field, value in profile_data.items():
-            setattr(user, field, value)
-        db.session.add(user)
+            if field in allowed_fields:
+                setattr(user, field, value)
+
         db.session.commit()
         return user
