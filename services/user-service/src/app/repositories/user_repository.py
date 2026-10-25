@@ -15,6 +15,15 @@ class UserRepository:
         ).scalar_one_or_none()
 
     @staticmethod
+    def public_slug_exists(slug: str) -> bool:
+        return (
+            db.session.execute(
+                db.select(User.id).where(User.public_slug == slug).limit(1)
+            ).first()
+            is not None
+        )
+    
+    @staticmethod
     def create(user: User) -> User:
         db.session.add(user)
         db.session.commit()

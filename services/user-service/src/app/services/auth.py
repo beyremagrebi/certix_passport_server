@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.user_role import UserRole
 from app.models.refresh_token import RefreshToken
 from app.repositories.user_repository import UserRepository
+from app.services.public_slug import PublicSlugService
 
 
 class AuthError(Exception):
@@ -19,6 +20,8 @@ class AuthError(Exception):
 
 
 class AuthService:
+    REGISTRATION_MAX_ATTEMPTS = 3
+
     @staticmethod
     def _store_refresh_token(token: str, user_id: int) -> None:
         claims = decode_token(token)
@@ -32,21 +35,41 @@ class AuthService:
         db.session.add(refresh_token)
 
     @staticmethod
+    def _create_student(data: dict) -> User:
+        """Persist a new student that owns a unique public slug."""
+        for _ in range(AuthService.REGISTRATION_MAX_ATTEMPTS):
+            user = User(
+                email=data["email"],
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                role=UserRole.STUDENT,
+                public_slug=PublicSlugService.generate_unique(
+                    data["first_name"], data["last_name"]
+                ),
+            )
+            user.set_password(data["password"])
+
+            try:
+                return UserRepository.create(user)
+            except IntegrityError as exc:
+                db.session.rollback()
+                if UserRepository.get_by_email(data["email"]) is not None:
+                    raise AuthError("Email already registered.", 409) from exc
+                # Otherwise a concurrent request took this slug first:
+                # loop again with a freshly generated one.
+
+        raise AuthError(
+            "Registration could not be completed. Please try again.", 503
+        )
+        
+    @staticmethod
     def register(data: dict) -> dict:
         if UserRepository.get_by_email(data["email"]):
             raise AuthError("Email already registered.", 409)
 
-        user = User(
-            email=data["email"],
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            role=UserRole.STUDENT,
-        )
-        user.set_password(data["password"])
-
         try:
             # Save user first so user.id is available.
-            UserRepository.create(user)
+            user = AuthService._create_student(data)
 
             # Generate tokens after successful registration.
             access_token = create_access_token(identity=str(user.id))
@@ -73,6 +96,7 @@ class AuthService:
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "slug":user.public_slug
             },
         }
 
