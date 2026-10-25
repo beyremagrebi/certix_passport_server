@@ -1,17 +1,8 @@
-import logging
-
 from app.extensions import db
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.member import member_to_dict
 
-audit_logger = logging.getLogger("certix.audit")
-if not audit_logger.handlers:
-    _handler = logging.StreamHandler()
-    _handler.setFormatter(logging.Formatter("%(asctime)s AUDIT %(message)s"))
-    audit_logger.addHandler(_handler)
-    audit_logger.setLevel(logging.INFO)
-    audit_logger.propagate = False
 
 class AdminUserError(Exception):
     def __init__(self, message: str, code: str, status_code: int):
@@ -70,18 +61,4 @@ class AdminUserService:
             db.session.rollback()
             raise
 
-        AdminUserService._audit(actor_id, user.id, applied)
         return member_to_dict(user)
-
-    @staticmethod
-    def _audit(actor_id: int, target_id: int, applied: dict) -> None:
-        # Single place to replace by the audit_logs table once it exists.
-        audit_logger.info(
-            "admin_update_member actor_id=%s target_id=%s changes=%s",
-            actor_id,
-            target_id,
-            {
-                field: getattr(value, "value", value)
-                for field, value in applied.items()
-            },
-        )

@@ -25,7 +25,6 @@ def register_jwt_middleware(app: Flask) -> None:
     @app.before_request
     def authenticate_request():
         endpoint = request.endpoint
-        print("JWT middleware endpoint:", endpoint)
 
         # Let Flask handle unmatched URLs normally (404).
         if endpoint is None:
