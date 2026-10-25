@@ -97,6 +97,7 @@ class AuthService:
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "is_active":user.is_active
+                "slug":user.public_slug
             },
         }
 
