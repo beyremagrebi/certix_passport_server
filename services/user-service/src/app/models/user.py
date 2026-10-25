@@ -70,6 +70,13 @@ class User(BaseModel):
         default=True,
         server_default=true(),
     )
+    # False = deactivated by an admin: the member can no longer log in.
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=true(),
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
