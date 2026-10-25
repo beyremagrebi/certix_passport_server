@@ -1,4 +1,4 @@
-from sqlalchemy import Enum as SQLAlchemyEnum, String
+from sqlalchemy import Boolean, Enum as SQLAlchemyEnum, String, true
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import (
     check_password_hash,
@@ -55,6 +55,20 @@ class User(BaseModel):
     )
     github_url: Mapped[str | None] = mapped_column(
         String(255), nullable=True
+    )
+    # Generated once at registration and never changed afterwards, so shared
+    # links and printed QR codes keep working even if the name is edited.
+    public_slug: Mapped[str] = mapped_column(
+        String(80),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    public_link_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=true(),
     )
 
     def set_password(self, password: str) -> None:

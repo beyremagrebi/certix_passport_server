@@ -14,4 +14,6 @@ def user_to_dict(user: User) -> dict:
         "level": user.level,
         "linkedin_url": user.linkedin_url,
         "github_url": user.github_url,
+        "public_slug": user.public_slug,
+        "public_link_active": user.public_link_active,
     }
