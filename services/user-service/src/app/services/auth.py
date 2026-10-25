@@ -96,6 +96,7 @@ class AuthService:
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "is_active":user.is_active
                 "slug":user.public_slug
             },
         }
@@ -106,6 +107,11 @@ class AuthService:
 
         if user is None or not user.check_password(data["password"]):
             raise AuthError("Invalid email or password.", 401)
+
+        # Checked after the password so the message never reveals whether
+        # an account exists to someone who does not know its password.
+        if not user.is_active:
+            raise AuthError("This account has been deactivated.", 403)
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
@@ -127,6 +133,7 @@ class AuthService:
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "is_active":user.is_active
             },
         }
 
@@ -142,6 +149,10 @@ class AuthService:
 
             if old_token is None or old_token.revoked:
                 raise AuthError("Invalid or revoked refresh token.", 401)
+
+            user = UserRepository.get_by_id(int(user_id))
+            if user is None or not user.is_active:
+                raise AuthError("This account has been deactivated.", 403)
 
             old_token.revoked = True
 
