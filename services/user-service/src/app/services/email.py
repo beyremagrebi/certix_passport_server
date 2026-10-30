@@ -1,5 +1,7 @@
 import json
 import logging
+import smtplib
+from email.message import EmailMessage
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -15,6 +17,52 @@ class EmailDeliveryError(Exception):
 
 class EmailService:
     @staticmethod
+    def _send_smtp(
+        *,
+        recipient: str,
+        subject: str,
+        html_content: str,
+    ) -> None:
+        host = current_app.config.get("SMTP_HOST")
+        username = current_app.config.get("SMTP_USERNAME")
+        password = current_app.config.get("SMTP_PASSWORD")
+        sender = current_app.config.get("EMAIL_FROM_ADDRESS")
+        port = current_app.config["SMTP_PORT"]
+
+        if not host or not username or not password or not sender:
+            raise EmailDeliveryError(
+                "SMTP is not configured. Set SMTP_HOST, SMTP_USERNAME, "
+                "SMTP_PASSWORD, and EMAIL_FROM_ADDRESS."
+            )
+
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = sender
+        message["To"] = recipient
+        message.set_content("Please use an HTML-capable email client to view this message.")
+        message.add_alternative(html_content, subtype="html")
+
+        try:
+            if current_app.config["SMTP_USE_SSL"]:
+                with smtplib.SMTP_SSL(host, port, timeout=10) as client:
+                    client.login(username, password)
+                    client.send_message(message)
+                return
+
+            with smtplib.SMTP(host, port, timeout=10) as client:
+                client.ehlo()
+                if current_app.config["SMTP_USE_TLS"]:
+                    client.starttls()
+                    client.ehlo()
+                client.login(username, password)
+                client.send_message(message)
+        except (OSError, smtplib.SMTPException) as exc:
+            logger.exception("%s delivery failed.", subject)
+            raise EmailDeliveryError(
+                f"{subject} could not be sent through SMTP."
+            ) from exc
+
+    @staticmethod
     def _send(
         *,
         recipient: str,
@@ -27,6 +75,14 @@ class EmailService:
 
         if provider == "console":
             logger.warning("%s for %s: %s", log_description, recipient, html_content)
+            return
+
+        if provider == "smtp":
+            EmailService._send_smtp(
+                recipient=recipient,
+                subject=subject,
+                html_content=html_content,
+            )
             return
 
         if provider != "brevo":

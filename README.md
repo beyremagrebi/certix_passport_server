@@ -88,6 +88,25 @@ Replace `your_local_password` with the same password used in the root `.env`.
 
 Generate secure random secrets for `SECRET_KEY` and `JWT_SECRET_KEY`. Do not commit real secrets to Git.
 
+Email delivery can use the local console logger, Brevo, or SMTP. For SMTP
+deployment, set `EMAIL_PROVIDER=smtp`, use a verified sender address, and
+provide the SMTP server credentials through deployment secrets:
+
+```env
+EMAIL_PROVIDER=smtp
+EMAIL_FROM_ADDRESS=no-reply@example.com
+EMAIL_FROM_NAME=Certix Passport
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+SMTP_USE_TLS=true
+SMTP_USE_SSL=false
+```
+
+Use port `465` with `SMTP_USE_SSL=true` and `SMTP_USE_TLS=false` when required
+by the provider. Never commit SMTP credentials.
+
 ## 6. Install dependencies
 
 From `services/user-service`:

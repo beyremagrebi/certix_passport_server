@@ -39,3 +39,20 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(
         days=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", "30"))
     )
+    APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8001").rstrip("/")
+    EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "console").lower()
+    EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
+    EMAIL_FROM_ADDRESS = os.getenv("EMAIL_FROM_ADDRESS")
+    EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Certix Passport")
+    SMTP_HOST = os.getenv("SMTP_HOST")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+    SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+    SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
+    EMAIL_CONFIRMATION_EXPIRES_MINUTES = int(
+        os.getenv("EMAIL_CONFIRMATION_EXPIRES_MINUTES", "30")
+    )
+    PASSWORD_RESET_EXPIRES_MINUTES = int(
+        os.getenv("PASSWORD_RESET_EXPIRES_MINUTES", "30")
+    )

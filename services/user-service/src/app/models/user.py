@@ -1,4 +1,4 @@
-from sqlalchemy import Enum as SQLAlchemyEnum, String
+from sqlalchemy import Boolean, Enum as SQLAlchemyEnum, String, false, true
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import (
     check_password_hash,
@@ -29,6 +29,30 @@ class User(BaseModel):
     password_hash: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
+    )
+    public_slug: Mapped[str] = mapped_column(
+        String(80),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=true(),
+    )
+    email_confirmed: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
+    email_confirmed: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
     )
     role: Mapped[UserRole] = mapped_column(
         SQLAlchemyEnum(

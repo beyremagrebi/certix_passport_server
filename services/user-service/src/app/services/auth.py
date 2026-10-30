@@ -1,4 +1,6 @@
 from sqlalchemy.exc import IntegrityError
+import re
+import secrets
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -10,6 +12,7 @@ from app.models.user import User
 from app.models.user_role import UserRole
 from app.models.refresh_token import RefreshToken
 from app.repositories.user_repository import UserRepository
+from app.services.email_confirmation import EmailConfirmationService
 
 
 class AuthError(Exception):
@@ -19,6 +22,15 @@ class AuthError(Exception):
 
 
 class AuthService:
+    @staticmethod
+    def _generate_public_slug(first_name: str, last_name: str) -> str:
+        base = re.sub(
+            r"[^a-z0-9]+",
+            "-",
+            f"{first_name}-{last_name}".lower(),
+        ).strip("-")
+        return f"{base[:60]}-{secrets.token_hex(8)}"
+
     @staticmethod
     def _store_refresh_token(token: str, user_id: int) -> None:
         claims = decode_token(token)
@@ -41,6 +53,10 @@ class AuthService:
             first_name=data["first_name"],
             last_name=data["last_name"],
             role=UserRole.STUDENT,
+            public_slug=AuthService._generate_public_slug(
+                data["first_name"],
+                data["last_name"],
+            ),
         )
         user.set_password(data["password"])
 
@@ -48,33 +64,21 @@ class AuthService:
             # Save user first so user.id is available.
             UserRepository.create(user)
 
-            # Generate tokens after successful registration.
-            access_token = create_access_token(identity=str(user.id))
-            refresh_token = create_refresh_token(identity=str(user.id))
-
-            # Store the refresh token for revocation and rotation.
-            AuthService._store_refresh_token(refresh_token, user.id)
-            db.session.commit()
+            EmailConfirmationService.create_and_send(user)
 
         except IntegrityError as exc:
             db.session.rollback()
-            raise AuthError("Email already registered.", 409) from exc
+            if UserRepository.get_by_email(data["email"]) is not None:
+                raise AuthError("Email already registered.", 409) from exc
+            raise AuthError(
+                "Registration could not be completed. Please try again.",
+                503,
+            ) from exc
         except Exception:
             db.session.rollback()
             raise
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "Bearer",
-            "expires_in": 900,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-            },
-        }
+        return {"email": user.email}
 
     @staticmethod
     def login(data: dict) -> dict:
@@ -82,6 +86,10 @@ class AuthService:
 
         if user is None or not user.check_password(data["password"]):
             raise AuthError("Invalid email or password.", 401)
+        if not user.email_confirmed:
+            raise AuthError(
+                "Please confirm your email address before logging in.", 403
+            )
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))

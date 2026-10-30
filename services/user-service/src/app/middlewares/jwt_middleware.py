@@ -14,8 +14,11 @@ from app.utils.api_response import error_response
 EXEMPT_ENDPOINTS = {
     "auth.register",
     "auth.login",
+    "auth.request_password_reset",
+    "auth.reset_password",
     "auth.refresh",
     "auth.logout",
+    "email_confirmation.confirm_email",
     "health.health_check",
 }
 
